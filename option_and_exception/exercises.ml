@@ -3,19 +3,19 @@
 For each pattern in the list below, give a value of type [int option list] that does not match the pattern and is not the empty list and explain why that's impossible. *)
 
 (* (Some x)::tl *)
-let l1 = []
+let l1 = [Some 0]
 
 (* [Some 1260; None] *)
-let l2 = []
+let l2 = [Some 1260; None]
 
 (* [Some x; _] *)
-let l3 = []
+let l3 = l2
 
 (* h1::h2::tl *)
-let l4 = []
+let l4 = l2
 
 (* h :: tl *)
-let l5 = []
+let l5 =l2
 
 (* Exercise: date before [✭✭]
 
@@ -25,11 +25,18 @@ Your function needs to work correctly only for dates, not for arbitrary date-lik
 
 type date = int * int * int
 
-let is_before : date -> date -> bool = fun _ _ -> raise (Failure "TODO")
-  
-(* Exercise: earliest date [✭✭✭] 
+let is_before : date -> date -> bool = function
+  | yl, ml, dl -> (
+      function
+      | yr, mr, dr ->
+          if yl == yr then if ml == mr then dl < dr else ml < mr else yl < yr )
 
-Write a function [earliest : (int*int*int) list -> (int*int*int) option]. It evaluates to [None] if the input list is empty, and to [Some d] if date d is the earliest date in the list. Hint: use is_before. *)
-  
-let rec earliest_date : date list -> date option = function _ -> raise (Failure "TODO")
-  
+(* Exercise: earliest date [✭✭✭]
+
+   Write a function [earliest : (int*int*int) list -> (int*int*int) option]. It evaluates to [None] if the input list is empty, and to [Some d] if date d is the earliest date in the list. Hint: use is_before. *)
+
+let earliest_date : date list -> date option = function
+  | [] ->
+      None
+  | a :: l ->
+      Some (List.fold_left (fun l r -> if is_before l r then l else r) a l)
