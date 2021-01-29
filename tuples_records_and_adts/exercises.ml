@@ -4,6 +4,7 @@ open Demo
 
 (* Exercise: Languages *)
 (* Your Implementation Goes Here *)
+type languages = {name: string; compiled: bool; target: string option}
 
 (* Exercise: Map and Fold_left *)
 let rec map f mylist =
