@@ -1,0 +1,10 @@
+(executable
+ (name test)
+ (modules test demo exercises)
+ (libraries ounit2))
+
+(rule
+ (alias runtest)
+ (deps test.exe)
+ (action
+  (run ./test.exe -ci true -display false)))
