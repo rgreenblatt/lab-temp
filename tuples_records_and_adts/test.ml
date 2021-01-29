@@ -30,49 +30,106 @@ let test_foldl =
 
 let test_depth =
   "test_depth"
-  >::: [ ("depth_empty" >:: fun _ -> assert_equal 0 (depth TEmpty))
-       ; ("depth_leaf" >:: fun _ -> assert_equal 1 (depth (Leaf 0)))
+  >::: [ ("depth_empty" >:: fun _ -> assert_equal 0 (depth Leaf))
+       ; ( "depth_leaf"
+         >:: fun _ -> assert_equal 1 (depth (Node (0, Leaf, Leaf))) )
        ; ( "depth_node"
-         >:: fun _ -> assert_equal 2 (depth (Node (0, TEmpty, TEmpty))) )
+         >:: fun _ -> assert_equal 2 (depth (Node (0, Leaf, Leaf))) )
        ; ( "depth_large"
          >:: fun _ ->
-         assert_equal 3 (depth (Node (5, Leaf 3, Node (9, Leaf 8, Leaf 10)))) )
+         assert_equal 3
+           (depth
+              (Node
+                 ( 5
+                 , Node (3, Leaf, Leaf)
+                 , Node (9, Node (8, Leaf, Leaf), Node (10, Leaf, Leaf)) ) ) )
+         )
        ; ( "depth_left"
          >:: fun _ ->
-         assert_equal 3 (depth (Node (5, Node (9, Leaf 8, Leaf 10), Leaf 3))) )
-       ]
+         assert_equal 3
+           (depth
+              (Node
+                 ( 5
+                 , Node (9, Node (8, Leaf, Leaf), Node (10, Leaf, Leaf))
+                 , Node (3, Leaf, Leaf) ) ) ) ) ]
 
 let test_is_bst =
   "test_is_bst"
-  >::: [ ("is_bst_empty" >:: fun _ -> assert_bool "" (is_bst TEmpty))
-       ; ("is_bst_leaf" >:: fun _ -> assert_bool "" (is_bst (Leaf 0)))
+  >::: [ ("is_bst_empty" >:: fun _ -> assert_bool "" (is_bst Leaf))
+       ; ( "is_bst_leaf"
+         >:: fun _ -> assert_bool "" (is_bst (Node (0, Leaf, Leaf))) )
        ; ( "is_bst_node"
-         >:: fun _ -> assert_bool "" (is_bst (Node (0, TEmpty, TEmpty))) )
+         >:: fun _ -> assert_bool "" (is_bst (Node (0, Leaf, Leaf))) )
        ; ( "is_bst_large"
          >:: fun _ ->
-         assert_bool "" (is_bst (Node (5, Leaf 3, Node (9, Leaf 8, Leaf 10))))
+         assert_bool ""
+           (is_bst
+              (Node
+                 ( 5
+                 , Node (3, Leaf, Leaf)
+                 , Node (9, Node (8, Leaf, Leaf), Node (10, Leaf, Leaf)) ) ) )
          )
        ; ( "is_bst_wrong_ordering_few_left"
-         >:: fun _ -> assert_bool "" (not (is_bst (Node (5, Leaf 7, Leaf 8))))
+         >:: fun _ ->
+         assert_bool ""
+           (not (is_bst (Node (5, Node (7, Leaf, Leaf), Node (8, Leaf, Leaf)))))
          )
        ; ( "is_bst_wrong_ordering_few_right"
-         >:: fun _ -> assert_bool "" (not (is_bst (Node (5, Leaf 3, Leaf 4))))
+         >:: fun _ ->
+         assert_bool ""
+           (not (is_bst (Node (5, Node (3, Leaf, Leaf), Node (4, Leaf, Leaf)))))
          )
        ; ( "is_bst_wrong_ordering_few_left_equal"
-         >:: fun _ -> assert_bool "" (not (is_bst (Node (5, Leaf 5, Leaf 8))))
+         >:: fun _ ->
+         assert_bool ""
+           (not (is_bst (Node (5, Node (5, Leaf, Leaf), Node (8, Leaf, Leaf)))))
          )
        ; ( "is_bst_wrong_ordering_few_right_equal"
-         >:: fun _ -> assert_bool "" (not (is_bst (Node (5, Leaf 3, Leaf 5))))
+         >:: fun _ ->
+         assert_bool ""
+           (not (is_bst (Node (5, Node (3, Leaf, Leaf), Node (5, Leaf, Leaf)))))
          )
        ; ( "is_bst_wrong_ordering_many_left"
          >:: fun _ ->
          assert_bool ""
-           (not (is_bst (Node (5, Leaf 3, Node (9, Leaf 8, Leaf 9))))) )
+           (not
+              (is_bst
+                 (Node
+                    ( 5
+                    , Node (3, Leaf, Leaf)
+                    , Node (9, Node (8, Leaf, Leaf), Node (9, Leaf, Leaf)) ) ) ) )
+         )
        ; ( "is_bst_wrong_ordering_many_right"
          >:: fun _ ->
          assert_bool ""
-           (not (is_bst (Node (5, Leaf 3, Node (9, Leaf 9, Leaf 10))))) ) ]
+           (not
+              (is_bst
+                 (Node
+                    ( 5
+                    , Node (3, Leaf, Leaf)
+                    , Node (9, Node (9, Leaf, Leaf), Node (10, Leaf, Leaf)) ) ) ) )
+         ) ]
 
-let suite = "suite" >::: [test_map; test_foldl; test_is_bst]
+let makes_bst lst = assert_bool "" (is_bst (lst_to_tree lst))
+
+let collapses_correct lst =
+  assert_int_list_equal (List.sort compare lst)
+    (List.sort compare (collapse (lst_to_tree lst)))
+
+let test_sentence_to_tree =
+  "test_sentence"
+  >::: [ ("empty_is_bst" >:: fun _ -> makes_bst [])
+       ; ("single_is_bst" >:: fun _ -> makes_bst [8])
+       ; ("few_is_bst" >:: fun _ -> makes_bst [3; 9; 7])
+       ; ("many_is_bst" >:: fun _ -> makes_bst [3; 7; 9; 23; 1])
+       ; ("empty_collapses_correct" >:: fun _ -> collapses_correct [])
+       ; ("single_collapses_correct" >:: fun _ -> collapses_correct [8])
+       ; ("few_collapses_correct" >:: fun _ -> collapses_correct [3; 9; 7])
+       ; ("few_same_collapses_correct" >:: fun _ -> collapses_correct [3; 3; 3])
+       ; ( "many_collapses_correct"
+         >:: fun _ -> collapses_correct [3; 3; 7; 3; 9; 23; 1] ) ]
+
+let suite =
+  "suite" >::: [test_map; test_foldl; test_is_bst; test_sentence_to_tree]
 
 let () = run_test_tt_main suite

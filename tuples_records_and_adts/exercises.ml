@@ -14,31 +14,42 @@ let rec foldl (f : 'a -> 'b -> 'a) (x : 'a) (l : 'b mylist) =
 
 (* Exercise: Custom Trees *)
 
-type 'a tree = TEmpty | Leaf of 'a | Node of 'a * 'a tree * 'a tree
+type 'a tree = Leaf | Node of 'a * 'a tree * 'a tree
+
+let rec collapse = function
+  | Leaf ->
+      []
+  | Node (v, l, r) ->
+      [v] @ collapse l @ collapse r
 
 (* Exercise: Sentence to Tree *)
-(* let sentence_to_tree (s : string list) = todo *)
+let rec add_to_tree (s : 'a) (tree : 'a tree) =
+  match tree with
+  | Leaf ->
+      Node (s, Leaf, Leaf)
+  | Node (v, l, r) ->
+      if s < v then Node (v, add_to_tree s l, r)
+      else Node (v, l, add_to_tree s r)
 
-(* (1* Exercise: Traverse & Collapse *1) *)
-(* let tree_traverse = todo *)
+let rec lst_to_tree = function
+  | [] ->
+      Leaf
+  | x :: xs ->
+      add_to_tree x (lst_to_tree xs)
 
 (* Exercise: Depth *)
 let rec depth = function
-  | TEmpty ->
+  | Leaf ->
       0
-  | Leaf _ ->
-      1
   | Node (_, l, r) ->
       1 + max (depth l) (depth r)
 
 (* Exercise: Is BST? *)
 let op_check f op = match op with None -> true | Some v -> f v
 
-let rec is_bst_impl : int tree -> bool * int option = function
-  | TEmpty ->
+let rec is_bst_impl : 'a tree -> bool * 'a option = function
+  | Leaf ->
       (true, None)
-  | Leaf v ->
-      (true, Some v)
   | Node (v, l, r) ->
       let l_is_bst, l_v = is_bst_impl l in
       let r_is_bst, r_v = is_bst_impl r in
@@ -46,5 +57,3 @@ let rec is_bst_impl : int tree -> bool * int option = function
       , Some v )
 
 let is_bst (t : int tree) = match is_bst_impl t with v, _ -> v
-
-let v : bool = is_bst TEmpty
